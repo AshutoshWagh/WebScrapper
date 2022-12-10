@@ -52,6 +52,45 @@ def index():
 
             searchString = request.form['content'].replace("", "")
             
+            #We will use connect() to connect to RDS Instance
+            #host is the endpoint of your RDS instance
+            #user is the username you have given while creating the RDS instance
+            #Password is Master pass word you have given 
+            db = pymysql.connect(host="database-3.cmhhteet9oje.ap-south-1.rds.amazonaws.com", user = "webscrapperadmin", password="webscrapper123")
+            # you have cursor instance here
+            cursor = db.cursor()
+            cursor.execute("select version()")
+            #now you will get the version of MYSQL you have selected on instance
+            data = cursor.fetchone()
+            #Lets's create a DB
+            sql = '''create database kTestDb'''
+            cursor.execute(sql)
+            cursor.connection.commit()
+            #Create a table 
+            sql = '''
+                create table Data ( 
+                    rank int, 
+                    Retailer_Name text, 
+                    Stores text, 
+                    Revenue text 
+                    )'''
+            cursor.execute(sql)
+            #Check if our table is created or not 
+            sql = '''show tables'''
+            cursor.execute(sql)
+            cursor.fetchall()
+            #Output of above will be (('person',),)
+            #Insert some records in the table
+            for s in final:
+                sql = f'insert into Data(rank, Retailer_Name, Stores, Revenue) values({s[0]},{s[1]},{s[2]},{s[3]})'
+                cursor.execute(sql)
+            db.commit()
+            
+            #Lets select the data from above added table
+            sql = '''select * from Data'''
+            cursor.execute(sql)
+            cursor.fetchall()
+            
             my_df = pd.DataFrame(final)
             my_df.to_csv('my_csv2.csv', index=False, header=False, mode="w")
             return render_template('results.html', reviews=finalFinal, name=searchString)
